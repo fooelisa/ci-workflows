@@ -32,15 +32,21 @@ Currently one workflow: **`ai-review`** — AI code reviewer using Claude (via t
 
 ### Forgejo-hosted repo
 
-1. **Create the `claude-reviewer` Forgejo user** (one-time):
+**Heads up**: Forgejo silently stalls on `uses:` pointing at a github.com-hosted workflow — the job stays in `waiting` state indefinitely with no error. Until we mirror this repo onto Forgejo, Forgejo consumers must **inline** the workflow. The `.forgejo/workflows/ai-review.yaml` in this repo is kept as canonical reference — copy verbatim into each consumer.
+
+1. **Create the `claude-reviewer` Forgejo user + PAT** (one-time, admin-CLI, no web-UI login needed):
 
     ```
     kubectl -n forgejo exec deploy/forgejo -- \
       forgejo admin user create --username claude-reviewer \
-        --email claude-reviewer@dyinggiraffe.org --random-password
-    ```
+        --email claude-reviewer@dyinggiraffe.org \
+        --random-password --must-change-password=false
 
-    Log in as that user in the Forgejo UI, generate a PAT with scopes `read:repository` + `write:issue`.
+    kubectl -n forgejo exec -c main deploy/forgejo -- \
+      forgejo admin user generate-access-token \
+        --username claude-reviewer --token-name ai-review \
+        --scopes read:repository,write:issue --raw
+    ```
 
 2. **Set two secrets** on the org (or per-repo if you don't use orgs):
     - `ANTHROPIC_API_KEY`: same value as the GitHub org secret
@@ -48,17 +54,30 @@ Currently one workflow: **`ai-review`** — AI code reviewer using Claude (via t
 
     Forgejo reserves the `FORGEJO_` prefix, so this can't be named `FORGEJO_REVIEW_TOKEN`.
 
-3. **Add a caller workflow** to the consumer repo:
+3. **Add the inlined caller workflow** to the consumer repo (copy verbatim):
 
     ```yaml
     # .forgejo/workflows/ai-review.yaml
     on:
       pull_request:
         types: [opened, synchronize, reopened]
+    permissions:
+      contents: read
+      pull-requests: write
+      issues: write
     jobs:
       review:
-        uses: fooelisa/ci-workflows/.forgejo/workflows/ai-review.yaml@main
-        secrets: inherit
+        runs-on: ubuntu-latest
+        container:
+          image: ghcr.io/fooelisa/claude-action-runner:main
+          options: --memory=512m --cpus=0.5
+        steps:
+          - name: Run review
+            run: /usr/local/bin/review.sh
+            env:
+              GITHUB_TOKEN:       ${{ secrets.REVIEWER_PAT }}
+              ANTHROPIC_API_KEY:  ${{ secrets.ANTHROPIC_API_KEY }}
+              PR_NUMBER:          ${{ github.event.pull_request.number }}
     ```
 
 ## What lands on the PR
