@@ -16,6 +16,12 @@ Currently one workflow: **`ai-review`** — AI code reviewer using Claude (via t
     on:
       pull_request:
         types: [opened, synchronize, reopened]
+    # Required: caller must grant what the reusable workflow needs.
+    # GHA rejects the run at parse time otherwise.
+    permissions:
+      contents: read
+      pull-requests: write
+      issues: write
     jobs:
       review:
         uses: fooelisa/ci-workflows/.github/workflows/ai-review.yaml@main
