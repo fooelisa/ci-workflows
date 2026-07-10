@@ -42,9 +42,11 @@ Currently one workflow: **`ai-review`** — AI code reviewer using Claude (via t
 
     Log in as that user in the Forgejo UI, generate a PAT with scopes `read:repository` + `write:issue`.
 
-2. **Set two org secrets** at `https://forgejo.motmot-carp.ts.net/org/fooelisa/-/settings/actions/secrets`:
+2. **Set two secrets** on the org (or per-repo if you don't use orgs):
     - `ANTHROPIC_API_KEY`: same value as the GitHub org secret
-    - `FORGEJO_REVIEW_TOKEN`: the PAT from step 1
+    - `REVIEWER_PAT`: the PAT from step 1
+
+    Forgejo reserves the `FORGEJO_` prefix, so this can't be named `FORGEJO_REVIEW_TOKEN`.
 
 3. **Add a caller workflow** to the consumer repo:
 

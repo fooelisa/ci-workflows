@@ -3,10 +3,12 @@
 # with `uses: fooelisa/ci-workflows/.forgejo/workflows/ai-review.yaml@main`
 # and `secrets: inherit`.
 #
-# Two org-level Forgejo secrets are required:
-#   ANTHROPIC_API_KEY       from https://console.anthropic.com/settings/keys
-#   FORGEJO_REVIEW_TOKEN    PAT for the `claude-reviewer` Forgejo user,
-#                           scopes: read:repository + write:issue.
+# Two Forgejo secrets are required (org- or repo-level):
+#   ANTHROPIC_API_KEY   from https://console.anthropic.com/settings/keys
+#   REVIEWER_PAT        PAT for the `claude-reviewer` Forgejo user,
+#                       scopes: read:repository + write:issue.
+#                       Note: Forgejo reserves the FORGEJO_ prefix, so
+#                       we can't call this FORGEJO_REVIEW_TOKEN.
 
 on:
   workflow_call:
@@ -25,6 +27,6 @@ jobs:
       - name: Run review
         run: /usr/local/bin/review.sh
         env:
-          GITHUB_TOKEN:       ${{ secrets.FORGEJO_REVIEW_TOKEN }}
+          GITHUB_TOKEN:       ${{ secrets.REVIEWER_PAT }}
           ANTHROPIC_API_KEY:  ${{ secrets.ANTHROPIC_API_KEY }}
           PR_NUMBER:          ${{ github.event.pull_request.number }}
