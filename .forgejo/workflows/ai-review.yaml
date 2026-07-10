@@ -1,0 +1,33 @@
+# Reusable Forgejo Actions workflow that reviews a pull request with Claude.
+# Consumer repos add a 5-line caller in their own .forgejo/workflows/ai-review.yaml
+# with `uses: fooelisa/ci-workflows/.forgejo/workflows/ai-review.yaml@main`
+# and `secrets: inherit`.
+#
+# Two org-level Forgejo secrets are required:
+#   ANTHROPIC_CREDENTIALS   contents of ~/.claude/.credentials.json (from
+#                           the claude-workstation pod; grab via
+#                           `kubectl exec -n claude deploy/claude -- \
+#                            cat /home/claude/.claude/.credentials.json`)
+#   FORGEJO_REVIEW_TOKEN    PAT for the `claude-reviewer` Forgejo user,
+#                           scopes: read:repository + write:issue.
+
+on:
+  workflow_call:
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    container:
+      # TODO(prompt-tuning): pin to a specific claude-action-runner SHA once
+      # the prompt stabilizes. Rolling on :main during initial iteration.
+      image: ghcr.io/fooelisa/claude-action-runner:main
+      # Docker-level cgroup cap: keeps the review from pushing pik8s04
+      # (Pi 4, 8Gi, shares the node with the monitoring stack).
+      options: --memory=512m --cpus=0.5
+    steps:
+      - name: Run review
+        run: /usr/local/bin/review.sh
+        env:
+          GITHUB_TOKEN:          ${{ secrets.FORGEJO_REVIEW_TOKEN }}
+          ANTHROPIC_CREDENTIALS: ${{ secrets.ANTHROPIC_CREDENTIALS }}
+          PR_NUMBER:             ${{ github.event.pull_request.number }}

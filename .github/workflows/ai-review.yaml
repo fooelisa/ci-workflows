@@ -1,0 +1,32 @@
+# Reusable GitHub Actions workflow that reviews a pull request with Claude.
+# Consumer repos add a 5-line caller in their own .github/workflows/ai-review.yaml
+# with `uses: fooelisa/ci-workflows/.github/workflows/ai-review.yaml@main`
+# and `secrets: inherit`.
+#
+# One org-level (or per-repo) GitHub secret is required:
+#   ANTHROPIC_CREDENTIALS   contents of ~/.claude/.credentials.json (from
+#                           the claude-workstation pod)
+# GITHUB_TOKEN is auto-injected by GitHub Actions — no manual PAT needed.
+
+on:
+  workflow_call:
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    # github-hosted runners have 7 GiB RAM; no cgroup cap needed here.
+    container:
+      # TODO(prompt-tuning): pin to a specific claude-action-runner SHA once
+      # the prompt stabilizes. Rolling on :main during initial iteration.
+      image: ghcr.io/fooelisa/claude-action-runner:main
+    permissions:
+      contents: read
+      pull-requests: write
+      issues: write
+    steps:
+      - name: Run review
+        run: /usr/local/bin/review.sh
+        env:
+          GITHUB_TOKEN:          ${{ secrets.GITHUB_TOKEN }}
+          ANTHROPIC_CREDENTIALS: ${{ secrets.ANTHROPIC_CREDENTIALS }}
+          PR_NUMBER:             ${{ github.event.pull_request.number }}
