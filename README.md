@@ -8,7 +8,7 @@ Currently one workflow: **`ai-review`** — AI code reviewer using Claude (via t
 
 ### GitHub-hosted repo
 
-1. **Set an org secret** (one-time): `ANTHROPIC_CREDENTIALS` at `https://github.com/organizations/fooelisa/settings/secrets/actions`. Value: contents of `~/.claude/.credentials.json` from the claude-workstation pod.
+1. **Set an org secret** (one-time): `ANTHROPIC_API_KEY` at `https://github.com/organizations/fooelisa/settings/secrets/actions`. Generate a fresh key at [console.anthropic.com/settings/keys](https://console.anthropic.com/settings/keys) — dedicated to CI, not a personal-use key.
 2. **Add a caller workflow** to the consumer repo:
 
     ```yaml
@@ -43,7 +43,7 @@ Currently one workflow: **`ai-review`** — AI code reviewer using Claude (via t
     Log in as that user in the Forgejo UI, generate a PAT with scopes `read:repository` + `write:issue`.
 
 2. **Set two org secrets** at `https://forgejo.motmot-carp.ts.net/org/fooelisa/-/settings/actions/secrets`:
-    - `ANTHROPIC_CREDENTIALS`: same value as the GitHub org secret
+    - `ANTHROPIC_API_KEY`: same value as the GitHub org secret
     - `FORGEJO_REVIEW_TOKEN`: the PAT from step 1
 
 3. **Add a caller workflow** to the consumer repo:

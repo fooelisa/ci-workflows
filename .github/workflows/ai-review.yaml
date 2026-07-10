@@ -4,8 +4,7 @@
 # and `secrets: inherit`.
 #
 # One org-level (or per-repo) GitHub secret is required:
-#   ANTHROPIC_CREDENTIALS   contents of ~/.claude/.credentials.json (from
-#                           the claude-workstation pod)
+#   ANTHROPIC_API_KEY       from https://console.anthropic.com/settings/keys
 # GITHUB_TOKEN is auto-injected by GitHub Actions — no manual PAT needed.
 
 on:
@@ -27,6 +26,6 @@ jobs:
       - name: Run review
         run: /usr/local/bin/review.sh
         env:
-          GITHUB_TOKEN:          ${{ secrets.GITHUB_TOKEN }}
-          ANTHROPIC_CREDENTIALS: ${{ secrets.ANTHROPIC_CREDENTIALS }}
-          PR_NUMBER:             ${{ github.event.pull_request.number }}
+          GITHUB_TOKEN:       ${{ secrets.GITHUB_TOKEN }}
+          ANTHROPIC_API_KEY:  ${{ secrets.ANTHROPIC_API_KEY }}
+          PR_NUMBER:          ${{ github.event.pull_request.number }}

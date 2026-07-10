@@ -4,10 +4,7 @@
 # and `secrets: inherit`.
 #
 # Two org-level Forgejo secrets are required:
-#   ANTHROPIC_CREDENTIALS   contents of ~/.claude/.credentials.json (from
-#                           the claude-workstation pod; grab via
-#                           `kubectl exec -n claude deploy/claude -- \
-#                            cat /home/claude/.claude/.credentials.json`)
+#   ANTHROPIC_API_KEY       from https://console.anthropic.com/settings/keys
 #   FORGEJO_REVIEW_TOKEN    PAT for the `claude-reviewer` Forgejo user,
 #                           scopes: read:repository + write:issue.
 
@@ -28,6 +25,6 @@ jobs:
       - name: Run review
         run: /usr/local/bin/review.sh
         env:
-          GITHUB_TOKEN:          ${{ secrets.FORGEJO_REVIEW_TOKEN }}
-          ANTHROPIC_CREDENTIALS: ${{ secrets.ANTHROPIC_CREDENTIALS }}
-          PR_NUMBER:             ${{ github.event.pull_request.number }}
+          GITHUB_TOKEN:       ${{ secrets.FORGEJO_REVIEW_TOKEN }}
+          ANTHROPIC_API_KEY:  ${{ secrets.ANTHROPIC_API_KEY }}
+          PR_NUMBER:          ${{ github.event.pull_request.number }}
